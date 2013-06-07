@@ -24,7 +24,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Reflection;
 using Bricksoft.PowerCode;
@@ -41,11 +40,13 @@ namespace Bricksoft.DosToys
 
 		public static int Main( string[] arguments )
 		{
-			ConsoleUtils.WindowPosition direction = ConsoleUtils.WindowPosition.NotSet;
-
 			string file;
 			Settings settings;
 			int value;
+			ConsoleUtils.WindowPosition direction = ConsoleUtils.WindowPosition.NotSet;
+			int? margin = new int?();
+			int? cmargin = new int?();
+			int? rmargin = new int?();
 			bool writeToConfig = false;
 
 			app = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location);
@@ -112,18 +113,36 @@ namespace Bricksoft.DosToys
 						settings.clear();
 						settings.write();
 
+					} else if (a.StartsWith("m", StringComparison.CurrentCultureIgnoreCase)
+							|| a.StartsWith("cm", StringComparison.CurrentCultureIgnoreCase)
+							|| a.StartsWith("rm", StringComparison.CurrentCultureIgnoreCase)) {
+						string[] ar = a.Split(new char[] { ':' }, 2);
+						if (ar.Length != 2 || !int.TryParse(ar[1], out value)) {
+							DisplayError(settings, "invalid arguments");
+							return 5;
+						}
+						if (a.StartsWith("cm", StringComparison.CurrentCultureIgnoreCase)) {
+							cmargin = value;
+						} else if (a.StartsWith("rm", StringComparison.CurrentCultureIgnoreCase)) {
+							rmargin = value;
+						} else if (a.StartsWith("m", StringComparison.CurrentCultureIgnoreCase)) {
+							margin = value;
+						}
+
 					} else if (a.Equals("config", StringComparison.CurrentCultureIgnoreCase)) {
 						writeToConfig = true;
 					} else if (a.Equals("!config", StringComparison.CurrentCultureIgnoreCase)) {
 						writeToConfig = false;
 
-					} else if (a.StartsWith("e", StringComparison.CurrentCultureIgnoreCase)) {
+					} else if (a.Equals("edit", StringComparison.CurrentCultureIgnoreCase)) {
+						LaunchUrl("notepad.exe", file);
+					} else if (a.Equals("email", StringComparison.CurrentCultureIgnoreCase)) {
 						LaunchUrl("mailto:Kody Brown <kody@bricksoft.com>");
-					} else if (a.StartsWith("w", StringComparison.CurrentCultureIgnoreCase)) {
+					} else if (a.Equals("web", StringComparison.CurrentCultureIgnoreCase)) {
 						LaunchUrl("http://bricksoft.com");
-					} else if (a.StartsWith("s", StringComparison.CurrentCultureIgnoreCase)) {
+					} else if (a.Equals("src", StringComparison.CurrentCultureIgnoreCase) || a.Equals("source", StringComparison.CurrentCultureIgnoreCase)) {
 						LaunchUrl("http://github.com/kodybrown/" + app);
-					} else if (a.StartsWith("l", StringComparison.CurrentCultureIgnoreCase)) {
+					} else if (a.Equals("license", StringComparison.CurrentCultureIgnoreCase)) {
 						LaunchUrl("http://opensource.org/licenses/MIT");
 
 					} else {
@@ -137,7 +156,7 @@ namespace Bricksoft.DosToys
 
 			// If '--config' was specified without any other arguments, 
 			// it will only output the current values from config.
-			if (writeToConfig && direction == ConsoleUtils.WindowPosition.NotSet) {
+			if (writeToConfig && direction == ConsoleUtils.WindowPosition.NotSet && !margin.HasValue && !cmargin.HasValue && !rmargin.HasValue) {
 				DisplayCopyright();
 				DisplayConfig(settings);
 				return 0;
@@ -147,6 +166,15 @@ namespace Bricksoft.DosToys
 			if (writeToConfig) {
 				if (direction != ConsoleUtils.WindowPosition.NotSet) {
 					settings.attr<int>("direction", (int)direction);
+				}
+				if (margin.HasValue) {
+					settings.attr<int>("margin", margin.Value);
+				}
+				if (cmargin.HasValue) {
+					settings.attr<int>("cmargin", cmargin.Value);
+				}
+				if (rmargin.HasValue) {
+					settings.attr<int>("rmargin", rmargin.Value);
 				}
 				settings.write();
 			}
@@ -163,12 +191,28 @@ namespace Bricksoft.DosToys
 					return 3;
 				}
 			}
+			// If a margin was not specified: use the margin from config,
+			// otherwise use zero.
+			if (!margin.HasValue) {
+				margin = settings.contains("margin") ? settings.attr<int>("margin") : 0;
+			}
+			if (!cmargin.HasValue) {
+				cmargin = settings.contains("cmargin") ? settings.attr<int>("cmargin") : 0;
+			}
+			if (!rmargin.HasValue) {
+				rmargin = settings.contains("rmargin") ? settings.attr<int>("rmargin") : 0;
+			}
 
 			//
 			// Update the console.
 			//
 			try {
-				ConsoleUtils.MoveWindow((ConsoleUtils.WindowPosition)(int)direction);
+				if (margin.HasValue || (cmargin.Value == 0 && rmargin.Value == 0)) {
+					// Specifying a margin overrides col and row margins.
+					ConsoleUtils.MoveWindow((ConsoleUtils.WindowPosition)(int)direction, margin.Value, margin.Value);
+				} else {
+					ConsoleUtils.MoveWindow((ConsoleUtils.WindowPosition)(int)direction, cmargin.Value, rmargin.Value);
+				}
 			} catch (Exception ex) {
 				Console.Write("{0," + appLen + "} | Could not move the window.\n{1}", "** error", ex.Message);
 			}
@@ -184,12 +228,18 @@ namespace Bricksoft.DosToys
 			return 0;
 		}
 
-		private static void LaunchUrl( string url )
+		private static void LaunchUrl( string file ) { LaunchUrl(file, null); }
+
+		private static void LaunchUrl( string file, string args )
 		{
 			ProcessStartInfo info = new ProcessStartInfo();
 
 			info.Verb = "open";
-			info.FileName = url;
+			info.FileName = file;
+
+			if (args != null && args.Length > 0) {
+				info.Arguments = args;
+			}
 
 			Process.Start(info);
 		}
@@ -225,9 +275,13 @@ namespace Bricksoft.DosToys
 			//Console.WriteLine("      11|min|n       minimizes the console window.");
 			//Console.WriteLine("      12|restore     restores the console window from being minimized.");
 			Console.WriteLine();
-			Console.WriteLine("    --clear    clears the values in config.");
-			Console.WriteLine("    --config   when used with direction, the direction saved to config.");
-			Console.WriteLine("               when used by itself, the config values are displayed.");
+			Console.WriteLine("    --cmargin:n  sets only the column margin between the console window and its specified location.");
+			Console.WriteLine("    --rmargin:n  sets only the row margin between the console window and its specified location.");
+			Console.WriteLine("    --margin:n   sets the column and row margin between the console window and its specified location.");
+			Console.WriteLine("                 the margin values represents the approximate number of columns and rows.");
+			Console.WriteLine("    --clear      clears the values in config.");
+			Console.WriteLine("    --config     when used with direction, the direction saved to config.");
+			Console.WriteLine("                 when used by itself, the config values are displayed.");
 			Console.WriteLine("    the position of the --config option does not matter in relation to the direction.");
 
 			DisplayExamples();
@@ -250,6 +304,9 @@ namespace Bricksoft.DosToys
 		{
 			Console.WriteLine("\nSAVED CONFIG:");
 			Console.WriteLine("  direction = {0}", settings.contains("direction") ? ((ConsoleUtils.WindowPosition)settings.attr<int>("direction")).ToString() : "not set");
+			Console.WriteLine("  margin    = {0}", settings.contains("margin") ? settings.attr<int>("margin").ToString() : "not set");
+			Console.WriteLine("  cmargin   = {0}", settings.contains("cmargin") ? settings.attr<int>("cmargin").ToString() : "not set");
+			Console.WriteLine("  rmargin   = {0}", settings.contains("rmargin") ? settings.attr<int>("rmargin").ToString() : "not set");
 		}
 
 		private static void DisplayError( Settings settings, string message )
