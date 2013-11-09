@@ -1,4 +1,4 @@
-move
-====
+reloc
+=====
 
-A simple DOS/CLI utility that moves the current command prompt window.
+A simple DOS/CLI utility that relocates (and resizes) the current command prompt window.

@@ -1,25 +1,30 @@
-/*!
-	Copyright (C) 2006-2013 Kody Brown (kody@bricksoft.com).
-	
-	MIT License:
-	
-	Permission is hereby granted, free of charge, to any person obtaining a copy
-	of this software and associated documentation files (the "Software"), to
-	deal in the Software without restriction, including without limitation the
-	rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-	sell copies of the Software, and to permit persons to whom the Software is
-	furnished to do so, subject to the following conditions:
-	
-	The above copyright notice and this permission notice shall be included in
-	all copies or substantial portions of the Software.
-	
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-	FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-	DEALINGS IN THE SOFTWARE.
+//
+// Copyright (C) 2006-2013 Kody Brown (kody@bricksoft.com).
+//
+// MIT License:
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+
+/*
+	Last updated: 2013-06-05
+	Purpose: shrink, enlarge, move, center
 */
 
 using System;
@@ -150,26 +155,26 @@ namespace Bricksoft.PowerCode
 			GetWindowRect(hWin, out rc);
 			scr = Screen.FromPoint(new Point(rc.left, rc.top));
 
-			int cols = Console.WindowWidth, rows = Console.WindowHeight;
+			int cols = Console.WindowWidth - 1, rows = Console.WindowHeight - 1;
 			int x = rc.left, y = rc.top;
 
 			// Figure out the window size.
 			if (p == WindowPosition.Center) {
-				cols = Console.WindowWidth;
+				cols = Console.WindowWidth - 1;
 			} else if (p == WindowPosition.Top || p == WindowPosition.Bottom || p == WindowPosition.Maximized) {
 				cols = maxColWidth;
 			} else if (p == WindowPosition.TopRight || p == WindowPosition.Right || p == WindowPosition.BottomRight
 					|| p == WindowPosition.TopLeft || p == WindowPosition.Left || p == WindowPosition.BottomLeft) {
-				cols = (int)Math.Round(maxColWidth / 2F, 0);
+				cols = (int)Math.Round(maxColWidth / 2F, 0) - 1;
 			}
 
 			if (p == WindowPosition.Center) {
-				rows = Console.WindowHeight;
+				rows = Console.WindowHeight - 1;
 			} else if (p == WindowPosition.Left || p == WindowPosition.Right || p == WindowPosition.Maximized) {
 				rows = maxColHeight;
 			} else if (p == WindowPosition.TopLeft || p == WindowPosition.Top || p == WindowPosition.TopRight
 					|| p == WindowPosition.BottomLeft || p == WindowPosition.Bottom || p == WindowPosition.BottomRight) {
-				rows = (int)Math.Round(maxColHeight / 2F, 0);
+				rows = (int)Math.Round(maxColHeight / 2F, 0) - 1;
 			}
 
 			// Set the window size..
