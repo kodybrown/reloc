@@ -28,7 +28,7 @@ using System.IO;
 using System.Reflection;
 using Bricksoft.PowerCode;
 
-namespace Bricksoft.DosToys
+namespace reloc
 {
 	public class reloc
 	{
@@ -64,6 +64,7 @@ namespace Bricksoft.DosToys
 					if (Enum.IsDefined(typeof(ConsoleUtils.WindowPosition), value)) {
 						direction = (ConsoleUtils.WindowPosition)value;
 					} else {
+						DisplayAppName();
 						DisplayCopyright();
 						DisplayError(settings, "invalid value specified.");
 						DisplayConfig(settings);
@@ -101,6 +102,7 @@ namespace Bricksoft.DosToys
 					}
 
 					if (a.Equals("?") || a.StartsWith("h", StringComparison.CurrentCultureIgnoreCase)) {
+						DisplayAppName();
 						DisplayCopyright();
 						DisplayHelp(settings);
 						DisplayConfig(settings);
@@ -157,6 +159,7 @@ namespace Bricksoft.DosToys
 			// If '--config' was specified without any other arguments, 
 			// it will only output the current values from config.
 			if (writeToConfig && direction == ConsoleUtils.WindowPosition.NotSet && !margin.HasValue && !cmargin.HasValue && !rmargin.HasValue) {
+				DisplayAppName();
 				DisplayCopyright();
 				DisplayConfig(settings);
 				return 0;
@@ -185,6 +188,7 @@ namespace Bricksoft.DosToys
 				if (settings.contains("direction")) {
 					direction = (ConsoleUtils.WindowPosition)settings.attr<int>("direction");
 				} else {
+					DisplayAppName();
 					DisplayCopyright();
 					DisplayError(settings, "no direction specified");
 					DisplayConfig(settings);
@@ -258,64 +262,154 @@ namespace Bricksoft.DosToys
 
 		private static void DisplayHelp( Settings settings )
 		{
+			int w = Console.WindowWidth,
+				a = 2,
+				b = app.Length + 17;
+
+			Console.WriteLine("\nSYNOPSIS:");
+			Console.WriteLine(Text.Wrap(string.Format("\nA simple DOS/CLI utility that resizes and relocates the current command prompt window to various locations on the screen based on the specified arguments (or whatever is saved in its config).", app), w, 4));
 			Console.WriteLine("\nUSAGE:");
-			Console.WriteLine("  {0}.exe [--config][--clear] direction", app);
+			Console.WriteLine("\n    {0}.exe [--config][--clear] direction", app);
 			Console.WriteLine();
-			Console.WriteLine("    possible values for direction:");
-			Console.WriteLine("      1|bl           resizes the console window to 1/4 size. positions it at the bottom left.");
-			Console.WriteLine("      2|down|bottom  resizes the console window to full width and 1/2 height size. positions it at the bottom.");
-			Console.WriteLine("      3|br           resizes the console window to 1/4 size. positions it at the bottom right.");
-			Console.WriteLine("      4|left|west    resizes the console window to 1/2 width and full height. positions it at the left.");
-			Console.WriteLine("      5|center       positions the console window at the center of the screen (does not change size).");
-			Console.WriteLine("      6|right|east   resizes the console window to 1/2 width and full height. positions it at the right.");
-			Console.WriteLine("      7|tl           resizes the console window to 1/4 size. positions it at the top left.");
-			Console.WriteLine("      8|up|top       resizes the console window to full width and 1/2 height size. positions it at the top.");
-			Console.WriteLine("      9|tr           resizes the console window to 1/4 size. positions it at the top right.");
-			Console.WriteLine("      10|max|x       maximizes the console window.");
-			//Console.WriteLine("      11|min|n       minimizes the console window.");
-			//Console.WriteLine("      12|restore     restores the console window from being minimized.");
+			Console.WriteLine("  Supported Directions:");
+			Console.WriteLine(@"
+    7|tl            8|up|top        9|tr         
+    ▄▄▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄▄▄
+    ██████      █   █████████████   █      ██████
+    ██████      █   █████████████   █      ██████
+    █           █   █           █   █           █
+    █           █   █           █   █           █
+    █           █   █           █   █           █
+    ▀▀▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀▀▀
+    
+    4|left|west     5|center        6|right|east
+    ▄▄▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄▄▄
+    ██████      █   █           █   █      ██████
+    ██████      █   █   ▄▄▄▄▄   █   █      ██████
+    ██████      █   █   █████   █   █      ██████
+    ██████      █   █   ▀▀▀▀▀   █   █      ██████
+    ██████      █   █           █   █      ██████
+    ▀▀▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀▀▀
+    
+    1|bl            2|down|bottom   3|br
+    ▄▄▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄▄▄
+    █           █   █           █   █           █
+    █           █   █           █   █           █
+    █           █   █           █   █           █
+    ██████      █   █████████████   █      ██████
+    ██████      █   █████████████   █      ██████
+    ▀▀▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀▀▀
+    
+    10|max|x
+    ▄▄▄▄▄▄▄▄▄▄▄▄▄
+    █████████████
+    █████████████
+    █████████████
+    █████████████
+    █████████████
+    ▀▀▀▀▀▀▀▀▀▀▀▀▀");
+
+			//Console.WriteLine(Text.Wrap("11|min|n       minimizes the console window."));
+			//Console.WriteLine(Text.Wrap("12|restore     restores the console window from being minimized."));
 			Console.WriteLine();
-			Console.WriteLine("    --cmargin:n  sets only the column margin between the console window and its specified location.");
-			Console.WriteLine("    --rmargin:n  sets only the row margin between the console window and its specified location.");
-			Console.WriteLine("    --margin:n   sets the column and row margin between the console window and its specified location.");
-			Console.WriteLine("                 the margin values represents the approximate number of columns and rows.");
-			Console.WriteLine("    --clear      clears the values in config.");
-			Console.WriteLine("    --config     when used with direction, the direction saved to config.");
-			Console.WriteLine("                 when used by itself, the config values are displayed.");
-			Console.WriteLine("    the position of the --config option does not matter in relation to the direction.");
+
+			//writeOption("--cmargin:n", "Sets only the column margin between the console window and its specified location.", a, b, w);
+			//writeOption("--rmargin:n", "Sets only the row margin between the console window and its specified location.", a, b, w);
+			//writeOption("--margin:n", "Sets the column and row margin between the console window and its specified location. The margin values represents the approximate number of columns and rows.", a, b, w);
+			//Console.WriteLine();
+			writeOption("--clear", "Clears the values in config.", a, b, w);
+			writeOption("--config", "When used with direction, the direction saved to config. When used by itself, the config values are displayed.", a, b, w);
+			writeOption(" ", "The position of the `--config` option does not matter in relation to the direction.", a, b, w);
 
 			DisplayExamples();
 		}
 
+		// promptSymbol
+		private static string ps = Path.DirectorySeparatorChar == '\\' ? "> " : "$ ";
+
 		private static void DisplayExamples()
 		{
-			int w = 27;
+			int w = Console.WindowWidth,
+				a = 2,
+				b = app.Length + 17;
+
 			Console.WriteLine("\nEXAMPLES:");
-			Console.WriteLine("  {0,-" + w + "} displays all config values.", app + ".exe --config");
 			Console.WriteLine();
-			Console.WriteLine("  {0,-" + w + "} maximizes the console window.", app + ".exe maximize");
-			Console.WriteLine("  {0,-" + w + "} maximizes the console window.", app + ".exe 10");
-			Console.WriteLine("  {0,-" + w + "} resizes the console and positions at the top of the screen.", app + ".exe up");
+
+			writeExample(app + " max", "Maximizes the console window.", a, b, w);
+			writeExample(app + " 10", "Maximizes the console window.", a, b, w);
+			writeExample(app + " up", "Resizes the console and positions at the top of the screen.", a, b, w);
+			writeExample(app + " br", "Resizes the console and positions at the bottom right corner of the screen.", a, b, w);
 			Console.WriteLine();
-			Console.WriteLine("  if --config is used along with direction, the direction is applied, then saved to config.");
+			writeExample(app + " --config", "Displays current config values.", a, b, w);
+			writeExample(app + " l", "Relocates to the left edge and saves to config.", a, b, w);
 		}
 
 		private static void DisplayConfig( Settings settings )
 		{
+			int w = Console.WindowWidth,
+				a = 2,
+				b = 14;
+
 			Console.WriteLine("\nSAVED CONFIG:");
-			Console.WriteLine("  direction = {0}", settings.contains("direction") ? ((ConsoleUtils.WindowPosition)settings.attr<int>("direction")).ToString() : "not set");
-			Console.WriteLine("  margin    = {0}", settings.contains("margin") ? settings.attr<int>("margin").ToString() : "not set");
-			Console.WriteLine("  cmargin   = {0}", settings.contains("cmargin") ? settings.attr<int>("cmargin").ToString() : "not set");
-			Console.WriteLine("  rmargin   = {0}", settings.contains("rmargin") ? settings.attr<int>("rmargin").ToString() : "not set");
+			Console.WriteLine();
+
+			writeExpression("direction", (settings.contains("direction") ? ((ConsoleUtils.WindowPosition)settings.attr<int>("direction")).ToString() : "not set"), a, b, w);
+			//writeExpression("margin", (settings.contains("margin") ? settings.attr<int>("margin").ToString() : "not set"), a, b, w);
+			//writeExpression("cmargin", (settings.contains("cmargin") ? settings.attr<int>("cmargin").ToString() : "not set"), a, b, w);
+			//writeExpression("rmargin", (settings.contains("rmargin") ? settings.attr<int>("rmargin").ToString() : "not set"), a, b, w);
 		}
 
 		private static void DisplayError( Settings settings, string message )
 		{
+			DisplayAppName();
 			DisplayCopyright();
 			Console.WriteLine();
 			Console.WriteLine("{0," + appLen + "} | {1}", "** error", message);
 			DisplayHelp(settings);
 			DisplayConfig(settings);
+		}
+
+		private static void writeExample( string a, string b, int indentCol1, int indentCol2, int width )
+		{
+			int maxCol1 = indentCol2 - indentCol1 - ps.Length - 1;
+			string aa = string.Format("{0,-" + maxCol1 + "}", a);
+
+			if (aa.Length > maxCol1) {
+				// Wrap the description onto the next line
+				Console.WriteLine(Text.Wrap(aa, width, indentCol1));
+				Console.WriteLine(Text.Wrap("» " + b, width, indentCol2 - 1, indentCol2 + 1));
+			} else {
+				Console.WriteLine(Text.Wrap(ps + aa + "» " + b, width, indentCol1, indentCol2 + 1));
+			}
+		}
+
+		private static void writeExpression( string a, string b, int indentCol1, int indentCol2, int width )
+		{
+			int maxCol1 = indentCol2 - indentCol1 - 1;
+			string aa = string.Format("{0,-" + maxCol1 + "}", a);
+
+			if (aa.Length > maxCol1) {
+				// Wrap the description onto the next line
+				Console.WriteLine(Text.Wrap(aa, width, indentCol1));
+				Console.WriteLine(Text.Wrap("= " + b, width, indentCol2 - 1, indentCol2 + 1));
+			} else {
+				Console.WriteLine(Text.Wrap(aa + "= " + b, width, indentCol1, indentCol2 + 1));
+			}
+		}
+
+		private static void writeOption( string a, string b, int indentCol1, int indentCol2, int width )
+		{
+			int maxCol1 = indentCol2 - indentCol1 - 1;
+			string aa = string.Format("{0,-" + maxCol1 + "}", a);
+
+			if (aa.Length > maxCol1) {
+				// Wrap the description onto the next line
+				Console.WriteLine(Text.Wrap(aa, width, indentCol1));
+				Console.WriteLine(Text.Wrap("» " + b, width, indentCol2 - 1, indentCol2 + 1));
+			} else {
+				Console.WriteLine(Text.Wrap(aa + "» " + b, width, indentCol1, indentCol2 + 1));
+			}
 		}
 	}
 }

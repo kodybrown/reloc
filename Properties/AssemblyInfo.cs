@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: System.Reflection.AssemblyTitle("reloc ver:1.4.31108.2")]
+[assembly: System.Reflection.AssemblyTitle("reloc ver:1.4.31115.5")]
 [assembly: System.Reflection.AssemblyDescription("relocates the current console window.")]
 [assembly: System.Reflection.AssemblyCompany("Bricksoft.com")]
 [assembly: System.Reflection.AssemblyProduct("reloc")]
@@ -17,7 +17,7 @@
 [assembly: System.Runtime.InteropServices.ComVisible(false)]
 [assembly: System.CLSCompliant(false)]
 [assembly: System.Runtime.InteropServices.Guid("594CA055-3BF8-47EC-B5C1-F8B57390396C")]
-[assembly: System.Reflection.AssemblyVersion("1.4.31108.2")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.31108.2")]
+[assembly: System.Reflection.AssemblyVersion("1.4.31115.5")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.31115.5")]
 
 
